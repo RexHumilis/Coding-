@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Domphu — Money Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-brand">
+    <span class="nav-logo">◈</span>
+    <span class="nav-title">Domphu</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
+    <button class="nav-tab" data-tab="transaksi">Transaksi</button>
+    <button class="nav-tab" data-tab="anggaran">Anggaran</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-month-selector">
+      <button class="month-nav" id="prevMonth">‹</button>
+      <span id="monthLabel">April 2026</span>
+      <button class="month-nav" id="nextMonth">›</button>
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle tema">
+      <span id="themeIcon">🌙</span>
+    </button>
+  </div>
+</nav>
+
+<div class="page-container">
+
+  <div class="page active" id="page-dashboard">
+
+    <div class="kpi-row">
+      <div class="kpi-card kpi-balance">
+        <div class="kpi-label">Saldo Bersih</div>
+        <div class="kpi-value" id="kpiBalance">Rp 0</div>
+        <div class="kpi-sub" id="kpiBalanceSub">—</div>
+      </div>
+      <div class="kpi-card kpi-income">
+        <div class="kpi-icon">↑</div>
+        <div class="kpi-label">Pemasukan</div>
+        <div class="kpi-value" id="kpiIncome">Rp 0</div>
+        <div class="kpi-sub" id="kpiIncomeSub">0 transaksi</div>
+      </div>
+      <div class="kpi-card kpi-expense">
+        <div class="kpi-icon">↓</div>
+        <div class="kpi-label">Pengeluaran</div>
+        <div class="kpi-value" id="kpiExpense">Rp 0</div>
+        <div class="kpi-sub" id="kpiExpenseSub">0 transaksi</div>
+      </div>
+      <div class="kpi-card kpi-saving">
+        <div class="kpi-icon">◎</div>
+        <div class="kpi-label">Tabungan</div>
+        <div class="kpi-value" id="kpiSaving">0%</div>
+        <div class="kpi-sub">dari pemasukan</div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card chart-bar-wrap">
+        <div class="chart-card-header">
+          <span class="chart-card-title">Arus Kas 6 Bulan</span>
+        </div>
+        <canvas id="barChart" height="180"></canvas>
+      </div>
+      <div class="chart-card chart-donut-wrap">
+        <div class="chart-card-header">
+          <span class="chart-card-title">Pengeluaran per Kategori</span>
+        </div>
+        <div class="donut-inner-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center" id="donutCenter">
+            <span class="dc-label">Total</span>
+            <span class="dc-val" id="dcVal">Rp 0</span>
+          </div>
+        </div>
+        <div id="legendList" class="legend-list"></div>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <div class="recent-card">
+        <div class="section-hdr">
+          <span>Transaksi Terbaru</span>
+          <button class="link-btn" data-goto="transaksi">Lihat semua →</button>
+        </div>
+        <div class="recent-list" id="recentList">
+          <div class="empty-hint">Belum ada transaksi</div>
+        </div>
+      </div>
+      <div class="budget-status-card">
+        <div class="section-hdr"><span>Status Anggaran</span></div>
+        <div class="budget-status-list" id="budgetStatusList">
+          <div class="empty-hint">Belum ada anggaran</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page" id="page-transaksi">
+    <div class="tx-layout">
+
+      <div class="add-form-card">
+        <div class="type-toggle">
+          <button class="type-btn active" data-type="expense">↓ Pengeluaran</button>
+          <button class="type-btn" data-type="income">↑ Pemasukan</button>
+        </div>
+
+        <div class="form-field">
+          <label>Keterangan</label>
+          <input type="text" id="txName" placeholder="Contoh: Makan siang, Gaji, Ojek..." autocomplete="off"/>
+        </div>
+        <div class="form-field">
+            <label>Jumlah (Rp)</label>
+            <div class="rp-input-wrap">
+              <span class="rp-prefix">Rp</span>
+              <input class="rp-input" id="txSpinnerNum" type="text" inputmode="numeric" placeholder="0" autocomplete="off"/>
+            </div>
+            <input type="hidden" id="txAmount" value="0"/>
+          </div>
+          <div class="form-field">
+            <label>Tanggal</label>
+            <input type="date" id="txDate"/>
+          </div>
+
+        <div class="form-field">
+          <label>Kategori</label>
+          <div class="cat-pills" id="catPills"></div>
+        </div>
+
+        <div class="form-field">
+          <label>Catatan <span class="opt-badge">opsional</span></label>
+          <input type="text" id="txNote" placeholder="Tambah catatan..."/>
+        </div>
+
+        <p class="form-error" id="formError"></p>
+        <button class="submit-btn" id="submitBtn">+ Simpan Transaksi</button>
+      </div>
+
+      <div class="tx-list-panel">
+        <div class="tx-list-hdr">
+          <div class="search-wrap">
+            <span class="search-ico">⌕</span>
+            <input type="text" id="searchInput" placeholder="Cari transaksi..."/>
+          </div>
+          <select id="filterCat" class="filter-sel">
+            <option value="">Semua Kategori</option>
+          </select>
+          <select id="filterType" class="filter-sel">
+            <option value="">Semua Tipe</option>
+            <option value="income">Pemasukan</option>
+            <option value="expense">Pengeluaran</option>
+          </select>
+        </div>
+        <div class="tx-full-list" id="txFullList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page" id="page-anggaran">
+    <div class="budget-layout">
+
+      <div class="add-budget-card">
+        <h3 class="card-title">Buat Anggaran</h3>
+        <div class="form-field">
+          <label>Kategori</label>
+          <select id="budgetCat">
+            <option value="">Pilih kategori...</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label>Batas Bulanan (Rp)</label>
+          <div class="rp-input-wrap">
+            <span class="rp-prefix">Rp</span>
+            <input class="rp-input" id="spinnerNum" type="text" inputmode="numeric" placeholder="0" autocomplete="off"/>
+          </div>
+          <input type="hidden" id="budgetLimit" value="0"/>
+        </div>
+
+        <p class="form-error" id="budgetError"></p>
+        <button class="submit-btn" id="budgetSubmitBtn">Simpan Anggaran</button>
+      </div>
+
+      <div class="budget-cards-wrap" id="budgetCards">
+        <div class="empty-hint" style="padding:32px 0">Belum ada anggaran dibuat</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal-card" id="modalCard">
+    <div class="modal-icon" id="modalIcon"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" id="modalCancel">Batal</button>
+      <button class="modal-btn modal-confirm" id="modalConfirm">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<button class="fab" id="fabBtn" title="Tambah Transaksi">+</button>
+
+<script src="app.js"></script>
+</body>
+</html>
